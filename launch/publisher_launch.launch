@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Lanza el nodo publisher -->
+    <node pkg="NOMBRE_DE_TU_PAQUETE_AQUI" type="reto_topic_pub.py" name="topic_publisher_node" output="log" />
+</launch>

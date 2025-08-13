@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+import rospy, math
+from std_msgs.msg import Header
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
+
+def linspace(a, b, n):
+    if n <= 1: return [a]
+    step = (b - a) / float(n - 1)
+    return [a + i * step for i in range(n)]
+
+def make_grid(n=40, size=2.0, z=0.0):
+    half = size / 2.0
+    xs = linspace(-half, half, n)
+    ys = linspace(-half, half, n)
+    return [(x, y, z) for x in xs for y in ys]
+
+def make_ring(n=360, r=1.0, z=0.2):
+    return [(r*math.cos(2*math.pi*i/n), r*math.sin(2*math.pi*i/n), z) for i in range(n)]
+
+def main():
+    rospy.init_node("reto_pointcloud_publisher", anonymous=True)
+    # <<< nuevo tópico >>>
+    pub = rospy.Publisher("/reto_pointcloud2", PointCloud2, queue_size=1)
+
+    frame_id = rospy.get_param("~frame_id", "base_link")
+    rate_hz  = float(rospy.get_param("~rate", 5))
+    shape    = rospy.get_param("~shape", "ring")     # grid | ring
+    n        = int(rospy.get_param("~n", 360))
+    size     = float(rospy.get_param("~size", 2.0))
+
+    points = make_ring(max(20, n), size/2.0, 0.2) if shape=="ring" else make_grid(n, size, 0.0)
+    header = Header(frame_id=frame_id)
+    rate = rospy.Rate(rate_hz)
+
+    rospy.loginfo("Publicando PointCloud2 en /reto_pointcloud2 (%s) a %.1f Hz, frame=%s",
+                  shape, rate_hz, frame_id)
+
+    while not rospy.is_shutdown():
+        header.stamp = rospy.Time.now()
+        msg = pc2.create_cloud_xyz32(header, points)
+        pub.publish(msg)
+        rate.sleep()
+
+if __name__ == "__main__":
+    main()

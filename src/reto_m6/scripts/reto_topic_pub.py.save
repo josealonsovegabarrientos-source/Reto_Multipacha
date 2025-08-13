@@ -1,0 +1,30 @@
+# pon esto como PRIMERA línea:
+# !/usr/bin/env python3  ← (con # al inicio)
+# guarda y cierra
+import rospy
+from std_msgs.msg import String
+
+def main():
+    # 1) inicializa el nodo
+    rospy.init_node("reto_topic_publisher")
+    # 2) crea el publicador al tópico /reto_topic
+    pub = rospy.Publisher("/reto_topic", String, queue_size=10)
+    # 3) define la frecuencia 10 Hz
+    rate = rospy.Rate(10)
+
+    # mensaje fijo a publicar
+    msg = String(data="M6 Reto")
+
+    # 4) bucle principal: publica a 10 Hz hasta que se cierre ROS
+    while not rospy.is_shutdown():
+        pub.publish(msg)
+        rospy.loginfo("Pub -> %s", msg.data)
+        rate.sleep()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
+
+

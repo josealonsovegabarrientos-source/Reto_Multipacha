@@ -1,0 +1,17 @@
+<launch>
+  <!-- 1) Cargar el URDF como parámetro /robot_description -->
+  <param name="robot_description" textfile="$(find reto_m6)/urdf/reto_robot.urdf"/>
+
+  <!-- 2) Publicar /joint_states desde una GUI con sliders -->
+  <node pkg="joint_state_publisher_gui"
+        type="joint_state_publisher_gui"
+        name="joint_state_publisher" output="screen"/>
+
+  <!-- 3) Publicar transformaciones TF según /joint_states -->
+  <node pkg="robot_state_publisher"
+        type="robot_state_publisher"
+        name="robot_state_publisher" output="screen"/>
+
+  <!-- 4) Abrir RViz -->
+  <node pkg="rviz" type="rviz" name="rviz" output="screen"/>
+</launch>

@@ -1,0 +1,8 @@
+prefix=/home/ubuntu/multipacha_ws/devel
+
+Name: reto_m6
+Description: Description of reto_m6
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

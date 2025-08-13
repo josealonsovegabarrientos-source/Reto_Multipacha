@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Lanza el nodo subscriber con salida en pantalla -->
+    <node pkg="NOMBRE_DE_TU_PAQUETE_AQUI" type="reto_topic_sub.py" name="topic_subscriber_node" output="screen" />
+</launch>

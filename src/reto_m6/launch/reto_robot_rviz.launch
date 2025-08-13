@@ -1,0 +1,107 @@
+<launch>
+  
+  <!-- ============================================== -->
+  <!-- ARCHIVO DE LANZAMIENTO PARA EL ROBOT - FIXED  -->
+  <!-- ============================================== -->
+  
+  <!-- Argumentos configurables -->
+  <arg name="model" default="$(find reto_m6)/urdf/reto_robot.urdf" />
+  <arg name="gui" default="true" />
+  <arg name="use_joint_state_publisher_gui" default="true" />
+  
+  <!-- ============================================== -->
+  <!-- CARGAR EL MODELO URDF AL PARAMETER SERVER     -->
+  <!-- ============================================== -->
+  
+  <param name="robot_description" 
+         command="$(find xacro)/xacro --inorder $(arg model)" />
+  
+  <!-- Información del robot -->
+  <param name="robot_name" value="reto_robot" />
+  <param name="urdf_file_path" value="$(arg model)" />
+  
+  <!-- ============================================== -->
+  <!-- JOINT STATE PUBLISHER CON GUI                 -->
+  <!-- ============================================== -->
+  
+  <!-- Joint State Publisher con GUI para controlar articulaciones -->
+  <group if="$(arg use_joint_state_publisher_gui)">
+    <node name="joint_state_publisher_gui" 
+          pkg="joint_state_publisher_gui" 
+          type="joint_state_publisher_gui"
+          output="screen">
+      
+      <!-- Configuración de la GUI -->
+      <param name="use_gui" value="true" />
+      <param name="rate" value="30" />
+      
+    </node>
+  </group>
+  
+  <!-- Joint State Publisher sin GUI (fallback) -->
+  <group unless="$(arg use_joint_state_publisher_gui)">
+    <node name="joint_state_publisher" 
+          pkg="joint_state_publisher" 
+          type="joint_state_publisher"
+          output="screen">
+      <param name="use_gui" value="false" />
+    </node>
+  </group>
+  
+  <!-- ============================================== -->
+  <!-- ROBOT STATE PUBLISHER                         -->
+  <!-- ============================================== -->
+  
+  <!-- Publicar las transformaciones TF del robot -->
+  <node name="robot_state_publisher" 
+        pkg="robot_state_publisher" 
+        type="robot_state_publisher"
+        output="screen">
+    
+    <!-- Configuración del publicador -->
+    <param name="publish_frequency" value="30.0" />
+    <param name="tf_prefix" value="" />
+    
+  </node>
+  
+  <!-- ============================================== -->
+  <!-- LANZAR RVIZ                                    -->
+  <!-- ============================================== -->
+  
+  <!-- Lanzar RViz -->
+  <node name="rviz" 
+        pkg="rviz" 
+        type="rviz" 
+        output="screen"
+        required="false"
+        respawn="false">
+    
+    <!-- Configuración básica de RViz -->
+    <param name="display_config" value="" />
+    
+  </node>
+  
+  <!-- ============================================== -->
+  <!-- NODOS ADICIONALES PARA DEBUGGING              -->
+  <!-- ============================================== -->
+  
+  <!-- Publicar un marco de referencia estático para el mundo -->
+  <node pkg="tf2_ros" 
+        type="static_transform_publisher" 
+        name="world_to_base_publisher"
+        args="0 0 0 0 0 0 1 world base_link"
+        output="log" />
+  
+  <!-- ============================================== -->
+  <!-- INFORMACIÓN Y PARÁMETROS DEL SISTEMA          -->
+  <!-- ============================================== -->
+  
+  <group ns="reto_robot_info">
+    <param name="launch_description" value="Complete launch file for reto_robot visualization in RViz" />
+    <param name="robot_joints" value="base_to_torre, torre_to_brazo, brazo_to_antebrazo, antebrazo_to_efector" />
+    <param name="continuous_joints" value="base_to_torre, antebrazo_to_efector" />
+    <param name="revolute_joints" value="torre_to_brazo, brazo_to_antebrazo" />
+    <param name="launch_time" value="Robot launched successfully" />
+  </group>
+
+</launch>

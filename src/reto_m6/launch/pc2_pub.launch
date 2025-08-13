@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="reto_m6" type="reto_pointcloud_pub.py" name="reto_pointcloud_pub" output="screen">
+    <param name="frame_id" value="base_link"/>
+    <param name="rate"     value="5"/>
+    <param name="shape"    value="grid"/>  <!-- grid | ring -->
+    <param name="n"        value="40"/>
+    <param name="size"     value="2.0"/>
+  </node>
+</launch>

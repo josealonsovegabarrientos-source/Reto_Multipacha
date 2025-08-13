@@ -1,0 +1,35 @@
+<launch>
+  
+  <!-- ============================================== -->
+  <!-- ARCHIVO DE LANZAMIENTO PARA EL PUBLICADOR     -->
+  <!-- ============================================== -->
+  
+  <!-- Información del launch file -->
+  <arg name="pkg_name" default="reto_m6" />
+  <arg name="node_name" default="reto_topic_publisher" />
+  
+  <!-- Lanzar el nodo publicador -->
+  <node name="$(arg node_name)" 
+        pkg="$(arg pkg_name)" 
+        type="reto_topic_pub.py" 
+        output="log"
+        respawn="false"
+        required="false">
+    
+    <!-- Parámetros opcionales para el nodo -->
+    <param name="frequency" value="10" />
+    <param name="topic_name" value="reto_topic" />
+    <param name="message_text" value="M6 Reto" />
+    
+    <!-- Remapping si se necesita cambiar el nombre del topic -->
+    <!-- <remap from="reto_topic" to="custom_topic_name" /> -->
+    
+  </node>
+  
+  <!-- Información de lanzamiento -->
+  <group>
+    <param name="launch_info" value="Launching reto_topic_pub.py node" />
+    <param name="launch_time" value="$(eval arg('pkg_name') + ' package launch')" />
+  </group>
+  
+</launch>

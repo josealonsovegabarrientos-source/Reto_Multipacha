@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+import rospy, numpy as np, math
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
+
+# ----- helpers -----
+def angle_coverage_deg(P, c):
+    ang = np.arctan2(P[:,1]-c[1], P[:,0]-c[0])
+    # ordenar y "desenvolver" ángulos
+    ang = np.unwrap(np.sort(ang))
+    cov = (ang.max() - ang.min()) * 180.0 / np.pi
+    # cobertura no puede exceder 360
+    return min(360.0, cov)
+
+def radial_cv(P, c):
+    r = np.linalg.norm(P - c, axis=1)
+    m = np.mean(r)
+    return (np.std(r) / m) if m > 1e-9 else np.inf
+
+def try_opencv_polygon(P):
+    """Intenta usar OpenCV para hull + approx poly. Devuelve (k_vertices, lados, ángulos) o None si no hay cv2."""
+    try:
+        import cv2
+    except Exception:
+        return None
+    # OpenCV espera Nx1x2 int/float
+    pts = P.astype(np.float32).reshape(-1,1,2)
+    hull = cv2.convexHull(pts, returnPoints=True)    # (M,1,2)
+    peri = cv2.arcLength(hull, True)
+    eps  = 0.02 * peri
+    poly = cv2.approxPolyDP(hull, eps, True)         # (K,1,2)
+    poly = poly.reshape(-1,2)
+    K = len(poly)
+    # lados y ángulos
+    sides = []
+    angs  = []
+    for i in range(K):
+        a = poly[i]
+        b = poly[(i+1)%K]
+        c = poly[(i+2)%K]
+        v1 = b - a
+        v2 = c - b
+        # lado
+        sides.append(np.linalg.norm(v1))
+        # ángulo interno en 'b'
+        cosang = np.clip(np.dot(v1, v2) / (np.linalg.norm(v1)*np.linalg.norm(v2) + 1e-9), -1, 1)
+        ang = 180.0 - (math.degrees(math.acos(cosang)))
+        angs.append(ang)
+    return K, np.array(sides), np.array(angs)
+
+def classify_shape(P):
+    """P: Nx3 o Nx2 -> Clasifica: circle / square / rectangle / unknown"""
+    if P.shape[1] > 2:
+        P = P[:, :2]  # proyectamos a XY
+    # 1) prueba de círculo por varianza radial
+    c = P.mean(axis=0)
+    cv = radial_cv(P, c)
+    cov = angle_coverage_deg(P, c)
+    if cv < 0.08 and cov > 300.0:
+        return "circle", {"cv": round(cv,3), "coverage_deg": int(cov)}
+
+    # 2) prueba con OpenCV (si está) -> hull con 4 vértices y ángulos ~90°
+    poly = try_opencv_polygon(P)
+    if poly is not None:
+        K, sides, angs = poly
+        if K == 4:
+            right = np.all((angs > 80) & (angs < 100))
+            ratio = sides.max() / max(1e-9, sides.min())
+            if right and ratio < 1.15:
+                return "square", {"angles": np.round(angs,1).tolist(), "ratio": round(ratio,3)}
+            elif right:
+                return "rectangle", {"angles": np.round(angs,1).tolist(), "ratio": round(ratio,3)}
+
+    # 3) fallback sin OpenCV: bounding box (menos preciso)
+    w = P[:,0].max() - P[:,0].min()
+    h = P[:,1].max() - P[:,1].min()
+    ratio = max(w,h) / max(1e-9, min(w,h))
+    if 0.8 <= ratio <= 1.25 and cv >= 0.08:
+        # cv alto descarta círculo; ratio≈1 sugiere cuadrado/rect
+        return "square/rect (bbox)", {"ratio": round(ratio,3), "cv": round(cv,3)}
+
+    return "unknown", {"cv": round(cv,3), "coverage_deg": int(cov)}
+
+# ----- ROS callback -----
+def cb(msg):
+    pts = np.array([p for p in pc2.read_points(msg, field_names=("x","y","z"), skip_nans=True)],
+                   dtype=np.float32)
+    if pts.size == 0:
+        return
+    label, info = classify_shape(pts)
+    rospy.loginfo("Shape: %s | info=%s | N=%d", label, info, pts.shape[0])
+
+if __name__ == "__main__":
+    rospy.init_node("pc2_shape_classifier")
+    rospy.Subscriber("/reto_pointcloud2", PointCloud2, cb, queue_size=1)
+    rospy.loginfo("Escuchando /reto_pointcloud2...")
+    rospy.spin()

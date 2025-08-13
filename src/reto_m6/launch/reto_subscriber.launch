@@ -1,0 +1,38 @@
+<launch>
+  
+  <!-- ============================================== -->
+  <!-- ARCHIVO DE LANZAMIENTO PARA EL SUSCRIPTOR     -->
+  <!-- ============================================== -->
+  
+  <!-- Información del launch file -->
+  <arg name="pkg_name" default="reto_m6" />
+  <arg name="node_name" default="reto_topic_subscriber" />
+  
+  <!-- Lanzar el nodo suscriptor -->
+  <node name="$(arg node_name)" 
+        pkg="$(arg pkg_name)" 
+        type="reto_topic_sub.py" 
+        output="screen"
+        respawn="true"
+        respawn_delay="2"
+        required="false">
+    
+    <!-- Parámetros opcionales para el nodo -->
+    <param name="topic_name" value="reto_topic" />
+    <param name="queue_size" value="10" />
+    
+    <!-- Remapping si se necesita cambiar el nombre del topic -->
+    <!-- <remap from="reto_topic" to="custom_topic_name" /> -->
+    
+    <!-- Configuración de logging -->
+    <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] [${node}]: ${message}" />
+    
+  </node>
+  
+  <!-- Información de lanzamiento -->
+  <group>
+    <param name="launch_info" value="Launching reto_topic_sub.py node with screen output" />
+    <param name="subscriber_config" value="Output redirected to terminal screen" />
+  </group>
+  
+</launch>

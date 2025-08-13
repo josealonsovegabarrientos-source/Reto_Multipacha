@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="reto_m6" type="reto_topic_sub.py" name="reto_topic_sub" output="screen"/>
+</launch>
