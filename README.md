@@ -7,4 +7,3 @@ Durante el desarrollo de este proyecto, se utilizaron herramientas de Inteligenc
 - Generar ejemplos de código y documentación.
 - Revisar y optimizar fragmentos de código.
 
-El uso de estas herramientas se limitó a la asistencia y referencia, manteniendo la autoría y responsabilidad del código y contenido final en el autor del repositorio.
